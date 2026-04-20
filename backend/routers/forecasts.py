@@ -2,6 +2,7 @@
 
 GET /api/forecasts       — returns historical + forecast data for a given
                            disease, jurisdiction, and model set.
+POST /api/forecasts      — with interventions in request body
 GET /api/jurisdictions   — returns list of available jurisdictions.
 """
 
@@ -13,7 +14,7 @@ from fastapi import APIRouter, Query, HTTPException
 
 from config import JURISDICTIONS, FORECAST_HORIZON
 from data.cdc_loader import get_historical_data
-from models.base import ForecastResult, WeeklyObservation
+from models.base import ForecastResult, WeeklyObservation, InterventionsRequest, InterventionState
 from models.arima_model import run_arima
 from models.seir_model import run_seir
 from models.ensemble import run_ensemble
@@ -21,6 +22,63 @@ from models.ensemble import run_ensemble
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Intervention effects (reduction in transmissions per week)
+INTERVENTION_EFFECTS = {
+    "school_closures": 0.20,
+    "masking_mandates": 0.15,
+    "transportation_restrictions": 0.10,
+    "gathering_limits": 0.15,
+    "workplace_closures": 0.25,
+}
+
+
+def apply_interventions(forecasts: list, interventions: list[InterventionState]) -> list:
+    """Apply intervention adjustments to forecast points.
+    
+    Interventions reduce forecast values by approximately the effect percentage
+    for each week where they are active.
+    """
+    if not interventions:
+        return forecasts
+
+    adjusted = []
+    for point in forecasts:
+        # Find which week this forecast point represents (1-4)
+        # Assuming forecasts are in order starting from week 1
+        forecast_week = len(adjusted) + 1
+        if forecast_week > 4:
+            adjusted.append(point)
+            continue
+
+        # Calculate combined reduction from all active interventions in this week
+        total_reduction = 0.0
+        for intervention in interventions:
+            # Only process enabled interventions
+            if not intervention.enabled:
+                continue
+                
+            for week_state in intervention.weeks:
+                if week_state.week == forecast_week and week_state.active:
+                    effect = INTERVENTION_EFFECTS.get(intervention.type, 0.0)
+                    total_reduction = max(total_reduction, effect)  # Use max to avoid over-reduction
+
+        # Apply reduction to all forecast values
+        if total_reduction > 0:
+            multiplier = 1.0 - total_reduction
+            adjusted_point = point.model_copy()
+            adjusted_point.point = point.point * multiplier
+            adjusted_point.lower_95 = max(0, point.lower_95 * multiplier)
+            adjusted_point.upper_95 = point.upper_95 * multiplier
+            adjusted_point.lower_80 = max(0, point.lower_80 * multiplier)
+            adjusted_point.upper_80 = point.upper_80 * multiplier
+            adjusted_point.lower_50 = max(0, point.lower_50 * multiplier)
+            adjusted_point.upper_50 = point.upper_50 * multiplier
+            adjusted.append(adjusted_point)
+        else:
+            adjusted.append(point)
+
+    return adjusted
 
 
 @router.get("/jurisdictions")
@@ -32,19 +90,13 @@ async def list_jurisdictions():
     ]
 
 
-@router.get("/forecasts", response_model=list[ForecastResult])
-async def get_forecasts(
-    disease: str = Query("flu", regex="^(flu|covid)$"),
-    jurisdiction: str = Query("USA"),
-    models: str = Query(
-        "arima,seir,ensemble", description="Comma-separated model names"
-    ),
-):
-    """Generate forecasts for the requested disease and jurisdiction.
-
-    Returns a list of ForecastResult, one per requested model.
-    Each includes both the historical series and forecast points.
-    """
+async def _generate_forecasts(
+    disease: str,
+    jurisdiction: str,
+    models: str,
+    interventions: Optional[list[InterventionState]] = None,
+) -> list[ForecastResult]:
+    """Internal helper to generate forecasts with optional interventions."""
     if jurisdiction not in JURISDICTIONS:
         raise HTTPException(
             status_code=400, detail=f"Unknown jurisdiction: {jurisdiction}"
@@ -95,6 +147,11 @@ async def get_forecasts(
     elif need_seir:
         seir_fc = await _run_seir()
 
+    # Apply interventions if provided
+    if interventions:
+        arima_fc = apply_interventions(arima_fc, interventions)
+        seir_fc = apply_interventions(seir_fc, interventions)
+
     if "arima" in requested_models and arima_fc:
         results.append(
             ForecastResult(
@@ -138,3 +195,36 @@ async def get_forecasts(
         )
 
     return results
+
+
+@router.get("/forecasts", response_model=list[ForecastResult])
+async def get_forecasts(
+    disease: str = Query("flu", regex="^(flu|covid)$"),
+    jurisdiction: str = Query("USA"),
+    models: str = Query(
+        "arima,seir,ensemble", description="Comma-separated model names"
+    ),
+):
+    """Generate forecasts for the requested disease and jurisdiction.
+
+    Returns a list of ForecastResult, one per requested model.
+    Each includes both the historical series and forecast points.
+    """
+    return await _generate_forecasts(disease, jurisdiction, models, interventions=None)
+
+
+@router.post("/forecasts", response_model=list[ForecastResult])
+async def get_forecasts_with_interventions(
+    disease: str = Query("flu", regex="^(flu|covid)$"),
+    jurisdiction: str = Query("USA"),
+    models: str = Query(
+        "arima,seir,ensemble", description="Comma-separated model names"
+    ),
+    request: InterventionsRequest = None,
+):
+    """Generate forecasts with optional intervention adjustments.
+
+    Request body can include interventions to adjust forecasts.
+    """
+    interventions = request.interventions if request else None
+    return await _generate_forecasts(disease, jurisdiction, models, interventions=interventions)

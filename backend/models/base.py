@@ -61,3 +61,24 @@ class AgentScenario(BaseModel):
     four_week_trend: str  # "increasing", "decreasing", "stable"
     percent_change: float
     forecast_summary: str
+
+# ===== Intervention Types =====
+class InterventionWeekState(BaseModel):
+    """State of an intervention in a specific week."""
+
+    week: int  # 1-4
+    active: bool
+
+
+class InterventionState(BaseModel):
+    """State of a specific intervention across 4 weeks."""
+
+    type: str  # e.g., "school_closures", "masking_mandates", etc.
+    enabled: bool = False  # Whether this intervention is enabled
+    weeks: list[InterventionWeekState]
+
+
+class InterventionsRequest(BaseModel):
+    """Request body containing interventions."""
+
+    interventions: list[InterventionState]

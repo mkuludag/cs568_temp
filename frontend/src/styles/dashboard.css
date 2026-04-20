@@ -425,7 +425,270 @@
   margin-bottom: var(--spacing-4);
 }
 
+/* ===== Dashboard Main Layout ===== */
+.dashboard-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-5);
+  align-items: start;
+}
+
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+}
+
+.dashboard-sidebar {
+  position: sticky;
+  top: var(--spacing-5);
+  height: fit-content;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  display: none; /* Hidden for benchmark version */
+}
+
+/* ===== Intervention Panel ===== */
+.intervention-panel {
+  background: var(--color-white);
+  border: 1px solid var(--color-base-lighter);
+  border-radius: 6px;
+  padding: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+}
+
+.intervention-panel__header {
+  margin-bottom: var(--spacing-3);
+  position: relative;
+}
+
+.intervention-panel__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-1);
+}
+
+.intervention-panel__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-base-darkest);
+  margin: 0;
+}
+
+.intervention-panel__badge {
+  display: inline-block;
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+  color: #2e7d32;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.intervention-panel__subtitle {
+  font-size: 0.8rem;
+  color: var(--color-base);
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.intervention-panel__clear {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: var(--color-error);
+  color: var(--color-white);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.intervention-panel__clear:hover {
+  background: #b73e1d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.intervention-panel__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+}
+
+.intervention-card {
+  padding: var(--spacing-3);
+  background: var(--color-base-lightest);
+  border: 1px solid var(--color-base-light);
+  border-left: 3px solid var(--color-base-light);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.intervention-card--enabled {
+  background: #f0f7ff;
+  border: 1px solid #90caf9;
+  border-left: 3px solid var(--color-primary);
+  box-shadow: 0 1px 3px rgba(0, 94, 162, 0.1);
+}
+
+.intervention-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+}
+
+.intervention-card__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  background: var(--color-white);
+  border: 2px solid var(--color-base-light);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.intervention-card__toggle:hover {
+  border-color: var(--color-primary);
+  background: #f0f7ff;
+}
+
+.intervention-card__toggle--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+}
+
+.intervention-card__toggle--active .intervention-card__toggle-dot {
+  background: var(--color-white);
+}
+
+.intervention-card__toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-base-light);
+  transition: all 0.2s;
+}
+
+.intervention-card__label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-base-dark);
+}
+
+.intervention-card__active-badge {
+  display: inline-block;
+  background: #c8e6c9;
+  color: #1b5e20;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.intervention-card__desc {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-base);
+  line-height: 1.3;
+}
+
+.intervention-card__weeks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  transition: opacity 0.2s;
+}
+
+.intervention-card__weeks--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.intervention-week {
+  padding: 6px 8px;
+  background: var(--color-white);
+  border: 2px solid var(--color-base-lighter);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-base-dark);
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.intervention-week:hover:not(:disabled) {
+  background: var(--color-base-lighter);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.intervention-week:disabled {
+  cursor: not-allowed;
+  color: var(--color-base-light);
+}
+
+.intervention-week--active {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary-dark);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 94, 162, 0.25);
+  transform: scale(1.05);
+}
+
+.intervention-panel__info {
+  padding: var(--spacing-3);
+  background: #f0f6ff;
+  border: 1px solid #d4e3f7;
+  border-radius: 4px;
+  border-left: 3px solid var(--color-primary);
+}
+
+.intervention-panel__note {
+  font-size: 0.75rem;
+  color: var(--color-base-dark);
+  margin: 0;
+  line-height: 1.5;
+}
+
 /* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-sidebar {
+    position: static;
+    max-height: none;
+  }
+}
+
 @media (max-width: 768px) {
   .control-panel__row {
     flex-direction: column;
@@ -442,5 +705,21 @@
 
   .model-selector {
     flex-wrap: wrap;
+  }
+
+  .intervention-card__weeks {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .intervention-panel__clear {
+    position: static;
+    width: 100%;
+    margin-top: var(--spacing-2);
+  }
+
+  .intervention-panel__header {
+    position: static;
   }
 }

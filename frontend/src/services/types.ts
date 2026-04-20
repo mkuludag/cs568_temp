@@ -95,3 +95,38 @@ export const DISEASE_LABELS: Record<Disease, string> = {
   flu: "Influenza",
   covid: "COVID-19",
 };
+
+/* ===== Intervention Types ===== */
+export interface InterventionWeekState {
+  week: 1 | 2 | 3 | 4;
+  active: boolean;
+}
+
+export interface InterventionState {
+  type: InterventionType;
+  enabled: boolean;
+  weeks: InterventionWeekState[];
+}
+
+export type InterventionType =
+  | "school_closures"
+  | "masking_mandates"
+  | "transportation_restrictions"
+  | "gathering_limits"
+  | "workplace_closures";
+
+export const INTERVENTION_LABELS: Record<InterventionType, string> = {
+  school_closures: "School Closures",
+  masking_mandates: "Masking Mandates",
+  transportation_restrictions: "Transportation Restrictions",
+  gathering_limits: "Gathering Limits",
+  workplace_closures: "Workplace Closures",
+};
+
+export const INTERVENTION_DESCRIPTIONS: Record<InterventionType, string> = {
+  school_closures: "Closure of educational institutions",
+  masking_mandates: "Required mask wearing in public spaces",
+  transportation_restrictions: "Limitations on public transportation",
+  gathering_limits: "Restrictions on public gatherings and events",
+  workplace_closures: "Closure or restrictions on non-essential workplaces",
+};

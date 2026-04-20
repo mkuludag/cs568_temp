@@ -9,6 +9,7 @@ import type {
   AgentResponse,
   Disease,
   ModelName,
+  InterventionState,
 } from "./types";
 
 const API_BASE = "/api";
@@ -31,13 +32,24 @@ export async function getJurisdictions(): Promise<Jurisdiction[]> {
 export async function getForecasts(
   disease: Disease,
   jurisdiction: string,
-  models: ModelName[] = ["arima", "seir", "ensemble"]
+  models: ModelName[] = ["arima", "seir", "ensemble"],
+  interventions: InterventionState[] = []
 ): Promise<ForecastResult[]> {
   const params = new URLSearchParams({
     disease,
     jurisdiction,
     models: models.join(","),
   });
+
+  // If interventions are provided, send them in the request body instead
+  if (interventions.length > 0) {
+    return fetchJSON<ForecastResult[]>(`${API_BASE}/forecasts?${params}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ interventions }),
+    });
+  }
+
   return fetchJSON<ForecastResult[]>(`${API_BASE}/forecasts?${params}`);
 }
 

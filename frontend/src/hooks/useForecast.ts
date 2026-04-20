@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getForecasts } from "../services/api";
-import type { ForecastResult, Disease, ModelName, ChartDataRow } from "../services/types";
+import type { ForecastResult, Disease, ModelName, ChartDataRow, InterventionState } from "../services/types";
 
 interface UseForecastReturn {
   results: ForecastResult[];
@@ -50,7 +50,8 @@ function buildChartData(results: ForecastResult[]): ChartDataRow[] {
 export function useForecast(
   disease: Disease,
   jurisdiction: string,
-  models: ModelName[]
+  models: ModelName[],
+  interventions: InterventionState[] = []
 ): UseForecastReturn {
   const [results, setResults] = useState<ForecastResult[]>([]);
   const [chartData, setChartData] = useState<ChartDataRow[]>([]);
@@ -58,13 +59,14 @@ export function useForecast(
   const [error, setError] = useState<string | null>(null);
 
   const modelsKey = models.sort().join(",");
+  const interventionsKey = JSON.stringify(interventions);
 
   const refetch = useCallback(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    getForecasts(disease, jurisdiction, models)
+    getForecasts(disease, jurisdiction, models, interventions)
       .then((data) => {
         if (!cancelled) {
           setResults(data);
@@ -82,7 +84,7 @@ export function useForecast(
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disease, jurisdiction, modelsKey]);
+  }, [disease, jurisdiction, modelsKey, interventionsKey]);
 
   useEffect(() => {
     const cleanup = refetch();
