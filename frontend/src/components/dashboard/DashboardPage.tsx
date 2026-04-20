@@ -32,9 +32,10 @@ import AgentPanel from "../agents/AgentPanel"; */
 const DEFAULT_INTERVENTIONS: InterventionState[] = [
   "school_closures",
   "masking_mandates",
-  "transportation_restrictions",
-  "gathering_limits",
-  "workplace_closures",
+  /* Simplified for benchmark - only core interventions */
+  // "transportation_restrictions",
+  // "gathering_limits",
+  // "workplace_closures",
 ].map((type) => ({
   type: type as InterventionType,
   enabled: false,
